@@ -19,37 +19,23 @@
 //  limitations under the License.
 // 
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
 using JetBrains.Annotations;
-
 using RestEase;
+using System;
+using System.Linq;
 
 namespace Couchbase.Lite.Sync
 {
     public sealed class SyncGateway
     {
-        #region Constants
-
-        [NotNull] 
-        private static readonly IOrchestrationRESTApi OrchestrationApi =
-            RestClient.For<IOrchestrationRESTApi>(Program.ServerUrl)
-            ?? throw new ApplicationException("Unable to create Orchestration REST API");
-
-        #endregion
 
         #region Variables
 
         [NotNull]
-        private readonly ISyncGatewayAdminRESTApi _adminApi;
+        public readonly ISyncGatewayAdminRESTApi Admin;
 
         [NotNull]
-        private readonly ISyncGatewayRESTApi _publicApi;
+        public readonly ISyncGatewayRESTApi Public;
 
         [NotNull]
         private readonly Uri _publicUri;
@@ -60,58 +46,27 @@ namespace Couchbase.Lite.Sync
 
         public string Session
         {
-            get => _publicApi.AuthCookie?.Split("=")?.LastOrDefault();
-            set => _publicApi.AuthCookie = $"SyncGatewaySession={value}";
+            get => Public.AuthCookie?.Split('=')?.LastOrDefault();
+            set => Public.AuthCookie = $"SyncGatewaySession={value}";
         }
 
         #endregion
 
         #region Constructors
 
-        public SyncGateway(string path, string config)
-            : base(OrchestrationApi.StartSyncGatewayAsync(path, new Dictionary<string, object> { ["config"] = config }).Result)
+        public SyncGateway([NotNull]Uri url, int publicPort, int adminPort)
         {
-            var publicPort = ParsePort(FindKeyValue(config, "interface"), 4984);
-            var adminPort = ParsePort(FindKeyValue(config, "adminInterface"), 4985);
-            var ipAddr = new Uri(Program.ServerUrl).Authority.Split(':').First();
-            var secure = FindKeyValue(config, "SSLCert") != null && FindKeyValue(config, "SSLKey") != null;
-            var scheme = secure ? "https" : "http";
-            var adminUrl = new Uri($"{scheme}://{ipAddr}:{adminPort}");
-            _publicUri = new Uri($"{scheme}://{ipAddr}:{publicPort}");
-            _publicApi = RestClient.For<ISyncGatewayRESTApi>(_publicUri)
-                         ?? throw new ApplicationException("Unable to create public SG REST API");
-            _adminApi = RestClient.For<ISyncGatewayAdminRESTApi>(adminUrl)
-                        ?? throw new ApplicationException("Unable to create admin SG REST API");
+            var adminUrl = new Uri($"{url.Scheme}://{url.Authority}:{adminPort}");
+            _publicUri = new Uri($"{url.Scheme}://{url.Authority}:{publicPort}");
+            Public = RestClient.For<ISyncGatewayRESTApi>(_publicUri)
+                         ?? throw new Exception("Unable to create public SG REST API");
+            Admin = RestClient.For<ISyncGatewayAdminRESTApi>(adminUrl)
+                        ?? throw new Exception("Unable to create admin SG REST API");
         }
 
         #endregion
 
         #region Public Methods
-
-        [NotNull]
-        [ItemNotNull]
-        public Task<AllDocsResponse> AllDocsAsync(string db, bool access = false, bool channels = false,
-            bool includeDocs = false, bool revs = false, bool updateSeq = false, int limit = Int32.MaxValue,
-            string[] keys = null, string startKey = null, string endKey = null) => _publicApi.GetAllDocsAsync(db,
-            access, channels, includeDocs, revs, updateSeq, limit, keys, startKey, endKey);
-
-        [NotNull]
-        [ItemNotNull]
-        public Task<IReadOnlyList<BulkDocsResponseItem>> BulkDocsAsync(string db,
-            IDictionary<string, object> body) => _publicApi.PostBulkDocsAsync(db, body);
-
-        [NotNull]
-        [ItemNotNull]
-        public Task<AdminCreateSessionResponse> CreateSessionAsync(string db, IDictionary<string, object> body) =>
-            _adminApi.AdminPostSessionAsync(db, body);
-
-        [NotNull]
-        [ItemNotNull]
-        public Task<DbResponse> GetDbAsync([NotNull] string db) => _publicApi.GetDbAsync(db);
-
-        [NotNull]
-        public Task DeleteSessionAsync(string db, string sessionId) =>
-            _publicApi.DeleteSessionAsync(db, $"SyncGatewaySession={sessionId}");
 
         [NotNull]
         public Uri GetReplicationUrl(string db)
@@ -124,48 +79,5 @@ namespace Couchbase.Lite.Sync
 
         #endregion
 
-        #region Private Methods
-
-        private string FindKeyValue(string rawJson, string key)
-        {
-            if (rawJson == null) {
-                return null;
-            }
-
-            var regex = new Regex($"\"{key}\"\\s*:\\s*\"([^\"]+)\"");
-            return regex.Matches(rawJson).FirstOrDefault()?.Groups[1]?.Value;
-        }
-
-        private int ParsePort(string value, int defaultVal)
-        {
-            if (value == null) {
-                return defaultVal;
-            }
-
-            var raw = value.Split(':')?.Last();
-            if (raw == null) {
-                return -1;
-            }
-
-            if (!Int32.TryParse(raw, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite,
-                CultureInfo.InvariantCulture, out int port)) {
-                return -1;
-            }
-
-            return port;
-        }
-
-        #endregion
-
-        #region Overrides
-
-        protected override IObjectRESTApi GetApi() => null;
-
-        protected override void ReleaseUnmanagedResources()
-        {
-            OrchestrationApi.KillSyncGatewayAsync(this);
-        }
-
-        #endregion
     }
 }
