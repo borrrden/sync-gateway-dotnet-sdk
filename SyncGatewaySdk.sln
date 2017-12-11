@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncGatewaySdk", "SyncGatewaySdk\SyncGatewaySdk.csproj", "{9754AF26-35F3-4253-8D41-728C330FFD30}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncGatewaySdk", "SyncGatewaySdk\SyncGatewaySdk.csproj", "{E592B817-6ADF-443E-A9C6-88E248EBAC4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9754AF26-35F3-4253-8D41-728C330FFD30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9754AF26-35F3-4253-8D41-728C330FFD30}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9754AF26-35F3-4253-8D41-728C330FFD30}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9754AF26-35F3-4253-8D41-728C330FFD30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E592B817-6ADF-443E-A9C6-88E248EBAC4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E592B817-6ADF-443E-A9C6-88E248EBAC4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E592B817-6ADF-443E-A9C6-88E248EBAC4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E592B817-6ADF-443E-A9C6-88E248EBAC4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
